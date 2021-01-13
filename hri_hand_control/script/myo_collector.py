@@ -1,12 +1,3 @@
-'''
-	Original by dzhu
-		https://github.com/dzhu/myo-raw
-
-	Edited by Fernando Cosentino
-		http://www.fernandocosentino.net/pyoconnect
-'''
-
-
 from __future__ import print_function
 
 import enum
@@ -235,51 +226,21 @@ class MyoRaw(object):
         _, _, _, _, v0, v1, v2, v3 = unpack('BHBBHHHH', fw.payload)
         print('firmware version: %d.%d.%d.%d' % (v0, v1, v2, v3))
 
-        self.old = True
+        #self.old = True
 
-        if self.old:
-            ## don't know what these do; Myo Connect sends them, though we get data
-            ## fine without them
-            self.write_attr(0x19, b'\x01\x02\x00\x00')
-            self.write_attr(0x2f, b'\x01\x00')
-            self.write_attr(0x2c, b'\x01\x00')
-            self.write_attr(0x32, b'\x01\x00')
-            self.write_attr(0x35, b'\x01\x00')
+        ##
+        self.write_attr(0x19, b'\x01\x02\x00\x00')
+        self.write_attr(0x2f, b'\x01\x00')
+        self.write_attr(0x2c, b'\x01\x00')
+        self.write_attr(0x32, b'\x01\x00')
+        self.write_attr(0x35, b'\x01\x00')
 
-            ## enable EMG data
-            #self.write_attr(0x28, b'\x01\x00')
-            ## enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
+        ## enable EMG data
+        #self.write_attr(0x28, b'\x01\x00')
+        ## enable IMU data
+        self.write_attr(0x1d, b'\x01\x00')
 
-            ## Sampling rate of the underlying EMG sensor, capped to 1000. If it's
-            ## less than 1000, emg_hz is correct. If it is greater, the actual
-            ## framerate starts dropping inversely. Also, if this is much less than
-            ## 1000, EMG data becomes slower to respond to changes. In conclusion,
-            ## 1000 is probably a good value.
-            C = 1000
-            emg_hz = 50
-            ## strength of low-pass filtering of EMG data
-            emg_smooth = 100
-
-            imu_hz = 50
-
-            ## send sensor parameters, or we don't get any data
-            #self.write_attr(0x19, pack('BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
-
-            # \x01\03\emg\imu\classifier*\00\00\00\00\00\00\00\00\00\00\00\00\00\00 *classifier turns on in order not to sleep 
-            self.write_attr(0x19, b"\x01\03\03\01\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
-
-        else:
-            name = self.read_attr(0x03)
-            print('device name: %s' % name.payload)
-
-            ## enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
-            ## enable on/off arm notifications
-            self.write_attr(0x24, b'\x02\x00')
-
-            # self.write_attr(0x19, b'\x01\x03\x00\x01\x01')
-            self.start_raw()
+        self.write_attr(0x19, b"\x01\03\03\01\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
 
         ## add data handlers
         def handle_data(p):

@@ -6,8 +6,8 @@
 ## rosrun hri_hand_control hri_joint_state_pub.py
 
 
-from rps import rock_paper_scissors, control
-from predict_rps import predict_rps_int
+from velocity import velocity_predictor, control
+from predict_pattern import predict_pattern_int
 import rospy, time, tf
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
@@ -580,37 +580,33 @@ class HJ_hand_tf():
 if __name__ == '__main__':
     flag = True
     serial_flag = False
-    N = 32
-    length_emg_array = 32 + 10
+    N = 30
     if serial_flag:
         stmser = STM_serial('/dev/ttyACM0')
     hj_tf = HJ_hand_tf(serial_flag)
 
     if flag:
-        rsp = rock_paper_scissors()
+        _velocity_pred = velocity_predictor()
         c = control(hj_tf)
         
-        m = MyoRaw(length_emg_array, tty='/dev/ttyACM0')
-        predictor = predict_rps_int(N, 'nakashima_left')
+        m = MyoRaw(N, tty='/dev/ttyACM0')
+        _pattern_pred = predict_pattern_int(N, 'hashimoto_net', 'pr_net.pth', ch_list=[0,1,2,5,6])
 
         m.connect()
         while not rospy.is_shutdown():
             m.run(1)
             emg = m.emg_array
-            if len(emg) == length_emg_array:
-                print(predictor.predict(m.emg_array))
-                fingers_state = rsp(predictor.predict(m.emg_array))
+            if len(emg) == N:
+                pred_int, processed_data = _pattern_pred.predict(m.emg_array, m.acc_array, m.gyro_array)
+                fingers_state = _velocity_pred(pred_int, processed_data)
                 c.move(fingers_state)
                 m.emg_array.clear()
+                time.sleep(1)
         m.disconnect()
         
 
     print ">> if you ready, press the Enter"
     raw_input()
     
-    rsp = rock_paper_scissors()
-    c = control(hj_tf)
-    while not rospy.is_shutdown():
-        fingers_state = rsp(1)
-        c.move(fingers_state)
+
         
