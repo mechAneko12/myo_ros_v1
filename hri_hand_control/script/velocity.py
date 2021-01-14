@@ -1,7 +1,7 @@
 import time
 
 class velocity_predictor:
-    def __init__(self, MIN=0, MAX=0.012, velocity=0.01):
+    def __init__(self, MIN=0, MAX=0.012, velocity=0.001):
         self.fingers_state = {'index_control' : None,
                              'middle_control' : None,
                              'ring_control' : None,
@@ -51,7 +51,7 @@ class velocity_predictor:
     def index_flex(self):
         for i, m in self.fingers_state.items():
             if i == 'index_control':
-                if self.fingers_state[i] > self.MIN:
+                if self.fingers_state[i] < self.MAX:
                     #
 
                     self.fingers_state[i] += self.velocity

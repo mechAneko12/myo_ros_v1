@@ -601,7 +601,7 @@ if __name__ == '__main__':
                 fingers_state = _velocity_pred(pred_int, processed_data)
                 c.move(fingers_state)
                 m.emg_array.clear()
-                time.sleep(1)
+                #time.sleep(1)
         m.disconnect()
         
 
