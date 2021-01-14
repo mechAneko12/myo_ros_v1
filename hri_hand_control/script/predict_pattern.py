@@ -50,7 +50,7 @@ class predict_pattern_int():
     def __init__(self, N, dataset_name, net_name, ch_list=[0,1,2,5,6]):
         self.N = N
         self.net = MyNet_class(197, 3, 2000)
-        with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard.pickle', mode='rb') as fp:
+        with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_pr.pickle', mode='rb') as fp:
             self.ss = pickle.load(fp)
 
         self.net.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + net_name))
@@ -67,9 +67,10 @@ class predict_pattern_int():
         dwt_emg = self.dwt_vector(raw_emg).flatten()
         processed_imu = self.process_imu(np.concatenate([acc, gyro], axis=1)) # imu: (N/2, 6)
         #print(dwt_emg.shape, processed_imu.shape)
-        processed_data = self.ss.transform(np.concatenate([dwt_emg, processed_imu]).reshape(1,-1))
+        processed_data = np.concatenate([dwt_emg, processed_imu]).reshape(1,-1)
+        processed_data_ss = self.ss.transform(np.concatenate([dwt_emg, processed_imu]).reshape(1,-1))
         # print(processed_emg.shape)
-        output = self.net(torch.from_numpy(processed_data).float())
+        output = self.net(torch.from_numpy(processed_data_ss).float())
         pred_int = output.argmax(dim=1, keepdim=True).detach().numpy()[0][0]
         print(pred_int)
         return pred_int, processed_data
