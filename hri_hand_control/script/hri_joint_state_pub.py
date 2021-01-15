@@ -586,11 +586,11 @@ if __name__ == '__main__':
     hj_tf = HJ_hand_tf(serial_flag)
 
     if flag:
-        _velocity_pred = velocity_predictor()
+        _velocity_pred = velocity_predictor('hashimoto_model')
         c = control(hj_tf)
         
         m = MyoRaw(N, tty='/dev/ttyACM0')
-        _pattern_pred = predict_pattern_int(N, 'hashimoto_net', 'pr_net.pth', ch_list=[0,1,2,5,6])
+        _pattern_pred = predict_pattern_int(N, 'hashimoto_model', 'net_pr.pth', ch_list=[0,1,2,5,6])
 
         m.connect()
         while not rospy.is_shutdown():
@@ -604,9 +604,9 @@ if __name__ == '__main__':
                 #time.sleep(1)
         m.disconnect()
         
-
-    print ">> if you ready, press the Enter"
-    raw_input()
+    print('Done.')
+    #print ">> if you ready, press the Enter"
+    #raw_input()
     
 
         

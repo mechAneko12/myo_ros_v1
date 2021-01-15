@@ -1,7 +1,61 @@
 import time
+import pickle 
+import torch
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import torch.nn.functional as F
+import torch.nn as nn
+import numpy as np
+
+class RegNet(torch.nn.Module):
+    def __init__(self, input_size, output_size, hidden):
+        super(RegNet, self).__init__()
+        self.fc1 = torch.nn.Linear(input_size, hidden)
+        self.bn1 = torch.nn.BatchNorm1d(hidden)
+        self.fc2 = torch.nn.Linear(hidden, hidden)
+        self.bn2 = torch.nn.BatchNorm1d(hidden)
+        self.fc3 = torch.nn.Linear(hidden, hidden)
+        self.bn3 = torch.nn.BatchNorm1d(hidden)
+        self.fc4 = torch.nn.Linear(hidden, hidden)
+        self.bn4 = torch.nn.BatchNorm1d(hidden)
+        self.fc5 = torch.nn.Linear(hidden, hidden)
+        self.bn5 = torch.nn.BatchNorm1d(hidden)
+        self.fc6 = torch.nn.Linear(hidden, 300)
+        self.bn6 = torch.nn.BatchNorm1d(300)
+        self.fc7 = torch.nn.Linear(300, output_size)
+
+        torch.nn.init.xavier_normal_(self.fc1.weight)
+        torch.nn.init.xavier_normal_(self.fc2.weight)
+        torch.nn.init.xavier_normal_(self.fc3.weight)
+        torch.nn.init.xavier_normal_(self.fc4.weight)
+        torch.nn.init.xavier_normal_(self.fc5.weight)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.bn1(x)
+        x = F.relu(x)
+        #x = self.fc2(x)
+        #x = self.bn2(x)
+        #x = F.relu(x)
+        #x = self.fc3(x)
+        #x = self.bn3(x)
+        #x = F.relu(x)
+        #x = self.fc4(x)
+        #x = self.bn4(x)
+        #x = F.relu(x)
+        x = self.fc5(x)
+        x = self.bn5(x)
+        x = F.relu(x)
+        x = self.fc6(x)
+        x = self.bn6(x)
+        x = F.relu(x)
+        x = self.fc7(x)
+        # x = torch.sigmoid(x)
+
+        return x
 
 class velocity_predictor:
-    def __init__(self, MIN=0, MAX=0.012, velocity=0.001):
+    def __init__(self, dataset_name, MIN=0, MAX=0.012, velocity=0.001):
         self.fingers_state = {'index_control' : None,
                              'middle_control' : None,
                              'ring_control' : None,
@@ -14,6 +68,19 @@ class velocity_predictor:
         self.MIN = MIN
         self.MAX = MAX
         self.velocity = velocity
+
+        with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_reg0.pickle', mode='rb') as fp:
+            self.ss_reg0 = pickle.load(fp)
+        with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_reg2.pickle', mode='rb') as fp:
+            self.ss_reg2 = pickle.load(fp)
+
+        self.net_reg0 = RegNet(197, 1, 1500)
+        self.net_reg0.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'net_reg0.pth'))
+        self.net_reg0.train(False)
+
+        self.net_reg2 = RegNet(197, 1, 1500)
+        self.net_reg2.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'net_reg2.pth'))
+        self.net_reg2.train(False)
 
         self.feature_tmp = None
 
@@ -44,7 +111,11 @@ class velocity_predictor:
     def all_flex(self):
         for i, m in self.fingers_state.items():
             if self.fingers_state[i] < self.MAX:
-                #
+                # predict velocity by reg0
+                feature_tmp =self.ss_reg0.transform(self.feature_tmp)
+                output = self.net_reg0(torch.from_numpy(feature_tmp).float())
+                pred_v = output.detach().numpy()[0][0]
+                print(pred_v)
 
                 self.fingers_state[i] += self.velocity
 
@@ -52,7 +123,11 @@ class velocity_predictor:
         for i, m in self.fingers_state.items():
             if i == 'index_control':
                 if self.fingers_state[i] < self.MAX:
-                    #
+                    # predict velocity by reg2
+                    feature_tmp =self.ss_reg0.transform(self.feature_tmp)
+                    output = self.net_reg0(torch.from_numpy(feature_tmp).float())
+                    pred_v = output.detach().numpy()[0][0]
+                    print(pred_v)
 
                     self.fingers_state[i] += self.velocity
             else:

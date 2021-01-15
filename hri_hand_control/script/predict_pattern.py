@@ -49,10 +49,11 @@ class MyNet_class(nn.Module):
 class predict_pattern_int():
     def __init__(self, N, dataset_name, net_name, ch_list=[0,1,2,5,6]):
         self.N = N
-        self.net = MyNet_class(197, 3, 2000)
+        
         with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_pr.pickle', mode='rb') as fp:
             self.ss = pickle.load(fp)
-
+            
+        self.net = MyNet_class(197, 3, 2000)
         self.net.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + net_name))
         self.net.train(False)
 
