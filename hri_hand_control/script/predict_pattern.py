@@ -47,15 +47,31 @@ class MyNet_class(nn.Module):
 
 
 class predict_pattern_int():
-    def __init__(self, N, dataset_name, net_name, ch_list=[0,1,2,5,6]):
+    def __init__(self, N, dataset_name, ch_list=[0,1,2,5,6], net_2_flag=False):
         self.N = N
         
         with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_pr.pickle', mode='rb') as fp:
             self.ss = pickle.load(fp)
-            
-        self.net = MyNet_class(197, 3, 2000)
-        self.net.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + net_name))
+        
+        with open('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'standard_pr_2.pickle', mode='rb') as fp:
+            self.ss_2 = pickle.load(fp)
+        
+        self.net_2_flag = net_2_flag
+        if self.net_2_flag:
+            self.net_2 = MyNet_class(185, 4, 800)
+            self.net_2.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'net_pr_2.pth'))
+            self.net_2.train(False)
+            output_size = 2
+        else:
+            output_size = 3
+        
+        self.net = MyNet_class(185, output_size, 2000)
+        self.net.load_state_dict(torch.load('/home/naoki/ros_ws_v1/src/myo_ros_v1/' + dataset_name + '/' + 'net_pr.pth'))
         self.net.train(False)
+
+        self.prev_int = 1
+
+        
 
         self.max_level = pywt.dwt_max_level(self.N, 'db2')
         
@@ -69,10 +85,32 @@ class predict_pattern_int():
         processed_imu = self.process_imu(np.concatenate([acc, gyro], axis=1)) # imu: (N/2, 6)
         #print(dwt_emg.shape, processed_imu.shape)
         processed_data = np.concatenate([dwt_emg, processed_imu]).reshape(1,-1)
-        processed_data_ss = self.ss.transform(np.concatenate([dwt_emg, processed_imu]).reshape(1,-1))
+        processed_data_ss = self.ss.transform(processed_data[:, :185])
         # print(processed_emg.shape)
         output = self.net(torch.from_numpy(processed_data_ss).float())
         pred_int = output.argmax(dim=1, keepdim=True).detach().numpy()[0][0]
+
+        # phase 2
+        if self.net_2_flag and pred_int == 0:
+            processed_data_ss = self.ss_2.transform(processed_data[:, :185])
+
+            output = self.net_2(torch.from_numpy(processed_data_ss).float())
+            pred_int = output.argmax(dim=1, keepdim=True).detach().numpy()[0][0]
+            pred_int = int(pred_int/2.0)
+        elif self.net_2_flag and pred_int == 1:
+            pred_int = 2
+
+        
+        tmp = pred_int
+        if self.prev_int == 1 and pred_int == 0:
+            pred_int = 1
+        elif self.prev_int == 0 and pred_int == 1:
+            pred_int = 0
+        elif self.prev_int == 2 and pred_int == 1:
+            pred_int = 2
+
+        
+        self.prev_int = tmp
         print(pred_int)
         return pred_int, processed_data
     

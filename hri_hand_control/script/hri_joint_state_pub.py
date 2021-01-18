@@ -17,6 +17,7 @@ import serial
 from myo_collector import MyoRaw
 import sys
 import numpy as np
+import threading
 
 class STM_serial():
     def __init__(self, PORT):
@@ -576,6 +577,32 @@ class HJ_hand_tf():
 
 
 
+def worker1(m, start):
+    while not rospy.is_shutdown():
+        m.run(1)
+        #emg_ = m.emg
+        #print('worker, ' + str(len(emg_)))
+        if time.time() -start >=30:
+            break
+
+def worker2(m, start, N, _pattern_pred, _velocity_pred, c):
+    _s = start
+    while not rospy.is_shutdown():
+        if len(m.emg_array) == N and (time.time() - _s) >= 0.050:
+            _s = time.time()
+            pred_int, processed_data = _pattern_pred.predict(m.emg_array, m.acc_array, m.gyro_array)
+            fingers_state = _velocity_pred(pred_int, processed_data)
+            c.move(fingers_state)
+        if time.time() -start >=30:
+            break
+
+def stop():
+    while not rospy.is_shutdown():
+        n = input()
+        if n == "e":
+            print("Terminate")
+            sys.exit()
+
 
 if __name__ == '__main__':
     flag = True
@@ -590,9 +617,11 @@ if __name__ == '__main__':
         c = control(hj_tf)
         
         m = MyoRaw(N, tty='/dev/ttyACM0')
-        _pattern_pred = predict_pattern_int(N, 'hashimoto_model', 'net_pr.pth', ch_list=[0,1,2,5,6])
+        _pattern_pred = predict_pattern_int(N, 'hashimoto_model', ch_list=[0,1,2,5,6], net_2_flag=True)
 
         m.connect()
+        start = time.time()
+        
         while not rospy.is_shutdown():
             m.run(1)
             emg = m.emg_array
@@ -602,9 +631,19 @@ if __name__ == '__main__':
                 c.move(fingers_state)
                 m.emg_array.clear()
                 #time.sleep(1)
+        '''
+        t1 = threading.Thread(target=worker1, args=(m, start,))
+        t2 = threading.Thread(target=worker2, args=(m, start, N, _pattern_pred, _velocity_pred, c,))
+        t1.setDaemon(True)
+        t2.setDaemon(True)
+        # スレッドスタート
+        t1.start()
+        t2.start()
+        stop()'''
+
         m.disconnect()
         
-    print('Done.')
+    print('\nDone.')
     #print ">> if you ready, press the Enter"
     #raw_input()
     
