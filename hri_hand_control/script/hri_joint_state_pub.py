@@ -578,6 +578,7 @@ class HJ_hand_tf():
 
 
 def worker1(m, start):
+    m.connect()
     while not rospy.is_shutdown():
         m.run(1)
         #emg_ = m.emg
@@ -619,9 +620,10 @@ if __name__ == '__main__':
         m = MyoRaw(N, tty='/dev/ttyACM0')
         _pattern_pred = predict_pattern_int(N, 'hashimoto_model', ch_list=[0,1,2,5,6], net_tmp_flag=True)
 
-        m.connect()
+        
         start = time.time()
         
+        m.connect()
         while not rospy.is_shutdown():
             m.run(1)
             emg = m.emg_array

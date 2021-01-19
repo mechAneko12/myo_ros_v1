@@ -110,19 +110,20 @@ class velocity_predictor:
     
     def all_flex(self):
         for i, m in self.fingers_state.items():
-            if self.fingers_state[i] < self.MAX:
-                # predict velocity by reg0
-                feature_tmp =self.ss_reg0.transform(self.feature_tmp)
-                output = self.net_reg0(torch.from_numpy(feature_tmp).float())
-                pred_v = output.detach().numpy()[0][0]
-                print(pred_v)
-                pred_v_tmp = pred_v * 0.012 / 300/3
-                if self.fingers_state[i] + pred_v_tmp > self.MAX:
-                    self.fingers_state[i] = self.MAX
-                else:
-                    self.fingers_state[i] += pred_v_tmp
+            if i != 'thumb_control' and i != 'thumb_joint_control':
+                if self.fingers_state[i] < self.MAX:
+                    # predict velocity by reg0
+                    feature_tmp =self.ss_reg0.transform(self.feature_tmp)
+                    output = self.net_reg0(torch.from_numpy(feature_tmp).float())
+                    pred_v = output.detach().numpy()[0][0]
+                    print(pred_v)
+                    pred_v_tmp = pred_v * 0.012 / 300/2
+                    if self.fingers_state[i] + pred_v_tmp > self.MAX:
+                        self.fingers_state[i] = self.MAX
+                    else:
+                        self.fingers_state[i] += pred_v_tmp
 
-                # self.fingers_state[i] += self.velocity
+                    # self.fingers_state[i] += self.velocity
 
     def index_flex(self):
         for i, m in self.fingers_state.items():
@@ -133,7 +134,7 @@ class velocity_predictor:
                     output = self.net_reg0(torch.from_numpy(feature_tmp).float())
                     pred_v = output.detach().numpy()[0][0]
                     print(pred_v)
-                    pred_v_tmp = pred_v * 0.012 / 300
+                    pred_v_tmp = pred_v * 0.012 / 300/2
                     if self.fingers_state[i] + pred_v_tmp > self.MAX:
                         self.fingers_state[i] = self.MAX
                     else:
