@@ -617,7 +617,7 @@ if __name__ == '__main__':
         c = control(hj_tf)
         
         m = MyoRaw(N, tty='/dev/ttyACM0')
-        _pattern_pred = predict_pattern_int(N, 'hashimoto_model', ch_list=[0,1,2,5,6], net_2_flag=True)
+        _pattern_pred = predict_pattern_int(N, 'hashimoto_model', ch_list=[0,1,2,5,6], net_tmp_flag=True)
 
         m.connect()
         start = time.time()
