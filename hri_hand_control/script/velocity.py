@@ -117,7 +117,7 @@ class velocity_predictor:
                     output = self.net_reg0(torch.from_numpy(feature_tmp).float())
                     pred_v = output.detach().numpy()[0][0]
                     print(pred_v)
-                    pred_v_tmp = pred_v * 0.012 / 300/2
+                    pred_v_tmp = pred_v * 0.012 / 300
                     if self.fingers_state[i] + pred_v_tmp > self.MAX:
                         self.fingers_state[i] = self.MAX
                     else:
@@ -134,7 +134,7 @@ class velocity_predictor:
                     output = self.net_reg0(torch.from_numpy(feature_tmp).float())
                     pred_v = output.detach().numpy()[0][0]
                     print(pred_v)
-                    pred_v_tmp = pred_v * 0.012 / 300/2
+                    pred_v_tmp = pred_v * 0.012 / 300
                     if self.fingers_state[i] + pred_v_tmp > self.MAX:
                         self.fingers_state[i] = self.MAX
                     else:
