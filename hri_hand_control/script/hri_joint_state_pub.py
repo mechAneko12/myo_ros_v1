@@ -33,10 +33,15 @@ class STM_serial():
         #print self.ser
 
     def send_signal(self, motor_id, motor_val):
-        #A = [0x01, 0x02, 0x03, 0x04, 0x05]
+        A = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
+        finger_list = ['i', 'm', 'r', 'l', 'j', 't']
+        finger = finger_list[A.index(motor_id)]
         
-        self.ser.write(bytes(bytearray([motor_id])))
-        self.ser.write(bytes(bytearray([motor_val])))        
+        string = finger + str(motor_val) + "\n"
+        self.ser.write(string.encode('UTF-8'))
+        self.ser.flush()
+        #self.ser.write(bytes(bytearray([motor_id])))
+        #self.ser.write(bytes(bytearray([motor_val])))        
 
         print "serial class: ", motor_id, motor_val
         '''
@@ -44,6 +49,14 @@ class STM_serial():
             RxValue = self.ser.readline()
             print "Rx: ", RxValue
         '''
+    def _send_signal(self, string):
+        string += "\n"
+        self.ser.write(string.encode('UTF-8'))
+        self.ser.flush()
+        #self.ser.write(bytes(bytearray([motor_id])))
+        #self.ser.write(bytes(bytearray([motor_val])))        
+
+        print string
 
 
 class HJ_hand_tf():    
@@ -540,6 +553,10 @@ class HJ_hand_tf():
             pass
         elif self.flag:                        
             stmser.send_signal(my_motor_id, stm_pris_val)
+    
+    def _hj_finger_control(self, string):
+        if self.flag:                        
+            stmser._send_signal(string)
 
     def hj_finger_mode01(self):
         """
@@ -607,10 +624,10 @@ def stop():
 
 if __name__ == '__main__':
     flag = True
-    serial_flag = False
+    serial_flag = True
     N = 30
     if serial_flag:
-        stmser = STM_serial('/dev/ttyACM0')
+        stmser = STM_serial('/dev/ttyACM1')
     hj_tf = HJ_hand_tf(serial_flag)
 
     if flag:

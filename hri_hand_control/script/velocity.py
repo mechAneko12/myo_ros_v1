@@ -166,29 +166,39 @@ class control:
 
         # index
         self.hj_tf.index_control(index_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_index_id, index_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_index_id, index_pris_val)
 
         # middle
         self.hj_tf.middle_control(middle_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_middle_id, middle_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_middle_id, middle_pris_val)
 
         # ring
         self.hj_tf.ring_control(ring_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_ring_id, ring_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_ring_id, ring_pris_val)
 
         # little
         self.hj_tf.little_control(little_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_little_id, little_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_little_id, little_pris_val)
 
         # thumb_joint
         self.hj_tf.thumb_joint_control(thumb_joint_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_thumb_joint_id, thumb_joint_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_thumb_joint_id, thumb_joint_pris_val)
 
         # thumb
         self.hj_tf.thumb_control(thumb_pris_val)
-        self.hj_tf.hj_finger_control(self.stm_thumb_id, thumb_pris_val)
+        #self.hj_tf.hj_finger_control(self.stm_thumb_id, thumb_pris_val)
+
+        self.hj_tf._hj_finger_control(str(self.round_number(index_pris_val)) + ','
+                                        + str(self.round_number(middle_pris_val)) + ','
+                                        + str(self.round_number(ring_pris_val)) + ','
+                                        + str(self.round_number(little_pris_val)) + ','
+                                        + str(self.round_number(thumb_joint_pris_val)) + ','
+                                        + str(self.round_number(thumb_pris_val)) + ',')
 
         #time.sleep(self.sleep_time)
+
+    def round_number(self, num):
+        return int(num * 1000)
 
 
 
